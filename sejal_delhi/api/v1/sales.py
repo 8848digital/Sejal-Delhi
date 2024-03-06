@@ -338,80 +338,80 @@ def get_specific_delivery_note(kwargs):
 	name = kwargs.get("name")
 
 	conditions = get_conditions(name)
-	try:
-		delivery_note_data = frappe.get_all(
-			"Delivery Note",
+	
+	delivery_note_data = frappe.get_all(
+		"Delivery Note",
+		fields=[
+			"name",
+			"posting_date",
+			"custom_client_name",
+			"custom_kun_category",
+			"custom_cs_category",
+			"custom_bb_category",
+			"custom_ot_category",
+			"custom_is_barcode",
+			"docstatus",
+		],
+		filters={"name": name},
+		as_list=False,
+	)
+	# return delivery_note_data
+
+	if delivery_note_data:
+		delivery_note_items = frappe.get_all(
+			"Delivery Note Item",
 			fields=[
-				"name",
-				"posting_date",
-				"custom_client_name",
-				"custom_kun_category",
-				"custom_cs_category",
-				"custom_bb_category",
-				"custom_ot_category",
-				"custom_is_barcode",
-				"docstatus",
+				"idx",
+				"item_code",
+				"custom_kun_wt",
+				"custom_gross_wt",
+				"custom_cs_wt",
+				"custom_bb_wt",
+				"custom_other_wt",
+				"custom_net_wt",
+				"custom_cs",
+				"custom_cs_amt",
+				"custom_kun_pc",
+				"custom_kun",
+				"custom_kun_amt",
+				"custom_ot_",
+				"custom_ot_amt",
+				"custom_other",
+				"custom_amount",
+				"warehouse",
 			],
-			filters={"name": name},
+			filters={"parent": name},  # Assuming 'name' is the Delivery Note name
+			order_by="idx ASC",
 			as_list=False,
 		)
-		# return delivery_note_data
 
-		if delivery_note_data:
-			delivery_note_items = frappe.get_all(
-				"Delivery Note Item",
-				fields=[
-					"idx",
-					"item_code",
+		# Add Delivery Note Items data to the Delivery Note data
+		delivery_note_data[0]["items"] = delivery_note_items
+		for i in delivery_note_data[0]["items"]:
+			custom_wt = frappe.db.get_value(
+				"Item",
+				i.item_code,
+				[
 					"custom_kun_wt",
-					"custom_gross_wt",
 					"custom_cs_wt",
 					"custom_bb_wt",
 					"custom_other_wt",
-					"custom_net_wt",
-					"custom_cs",
-					"custom_cs_amt",
-					"custom_kun_pc",
-					"custom_kun",
-					"custom_kun_amt",
-					"custom_ot_",
-					"custom_ot_amt",
-					"custom_other",
-					"custom_amount",
-					"warehouse",
 				],
-				filters={"parent": name},  # Assuming 'name' is the Delivery Note name
-				order_by="idx ASC",
-				as_list=False,
 			)
+			i["custom_pr_kun_wt"] = custom_wt[0]
+			i["custom_pr_cs_wt"] = custom_wt[1]
+			i["custom_pr_bb_wt"] = custom_wt[2]
+			i["custom_pr_other_wt"] = custom_wt[3]
 
-			# Add Delivery Note Items data to the Delivery Note data
-			delivery_note_data[0]["items"] = delivery_note_items
-			for i in delivery_note_data[0]["items"]:
-				custom_wt = frappe.db.get_value(
-					"Item",
-					i.item_code,
-					[
-						"custom_kun_wt",
-						"custom_cs_wt",
-						"custom_bb_wt",
-						"custom_other_wt",
-					],
-				)
-				i["custom_pr_kun_wt"] = custom_wt[0]
-				i["custom_pr_cs_wt"] = custom_wt[1]
-				i["custom_pr_bb_wt"] = custom_wt[2]
-				i["custom_pr_other_wt"] = custom_wt[3]
+		return build_response(
+			"success", data=delivery_note_data[0]
+		)  # Send success response with combined data
+	else:
+		return build_response("error", message=_("Delivery Note not found."))
 
-			return build_response(
-				"success", data=delivery_note_data[0]
-			)  # Send success response with combined data
-		else:
-			return build_response("error", message=_("Delivery Note not found."))
-
-	except Exception as e:
-		frappe.log_error(title=_("Specific Sales"), message=str(e))
-		return build_response("error", message=_("An error occurred while fetching data."))
+	# except Exception as e:
+	# 	frappe.log_error(title=_("Specific Sales"), message=str(e))
+	# 	return build_response("error", message=_("An error occurred while fetching data."))
 
 
 def build_response(status, data=None):
