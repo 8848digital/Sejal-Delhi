@@ -1,0 +1,99 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2024-03-05 17:29:15.933099",
+ "default_view": "List",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "material_abbr",
+  "material",
+  "material_group",
+  "pcs",
+  "piece_",
+  "column_break_q8cqn",
+  "carat",
+  "carat_",
+  "weight",
+  "gm_",
+  "amount"
+ ],
+ "fields": [
+  {
+   "fieldname": "material_abbr",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Material Abbr"
+  },
+  {
+   "fieldname": "material",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Material",
+   "options": "Material"
+  },
+  {
+   "fetch_from": "material.material_group",
+   "fieldname": "material_group",
+   "fieldtype": "Data",
+   "label": "Material Group"
+  },
+  {
+   "fieldname": "pcs",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Pcs"
+  },
+  {
+   "fieldname": "piece_",
+   "fieldtype": "Float",
+   "label": "Piece @"
+  },
+  {
+   "fieldname": "column_break_q8cqn",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "carat",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Carat"
+  },
+  {
+   "fieldname": "carat_",
+   "fieldtype": "Float",
+   "label": "Carat @"
+  },
+  {
+   "fieldname": "weight",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Weight"
+  },
+  {
+   "fieldname": "gm_",
+   "fieldtype": "Float",
+   "label": "Gm @"
+  },
+  {
+   "fieldname": "amount",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Amount",
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2024-03-05 17:29:15.933099",
+ "modified_by": "Administrator",
+ "module": "sejal_delhi",
+ "name": "Purchase Receipt Item Breakup Detail",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
