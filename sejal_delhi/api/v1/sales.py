@@ -12,6 +12,7 @@ def success_response(data, name):
 
 @frappe.whitelist(allow_guest=True)
 def create_delivery_note(kwargs):
+	X={}
 	try:
 		item_code_list = frappe.db.sql(
 			f"""SELECT dni.item_code
@@ -109,6 +110,7 @@ def create_delivery_note(kwargs):
 					return success_response(
 						data="Successfully created with name " + doc.name, name=doc.name
 					)
+				
 			else:
 				return error_response(f"""Ready Receipt of Item Code Is not Submitted""")
 		else:
