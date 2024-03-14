@@ -191,6 +191,7 @@ def create_purchase_receipt(kwargs):
 						return {"error": "Item Code length should be 3"}
 			purchase_receipt.insert(ignore_permissions=True)
 			# child table breakup create
+			purchase_item_breakup_name = []
 			for d in purchase_receipt.items:
 
 				purchase_item_breakup = frappe.new_doc("Purchase Receipt Item Breakup")
@@ -238,39 +239,25 @@ def create_purchase_receipt(kwargs):
 							"amount": t["amount"],
 						},
 					)
-					item_doc.append(
-						"custom_purchase_receipt_item_breakup_detail",
-						{
-							"material_abbr": material_abbr, 
-							"material": material,
-							"pcs": t["pcs"],
-							"piece_": t["piece_"],
-							"carat": t["carat"],
-							"weight": t["weight"],
-							"gm_": t["gm_"],
-							"amount": t["amount"],
-						}
-					)
-					purchase_item_breakup.insert(ignore_permissions=True)
-					# item_doc.insert(ignore_permissions=True)
-					if not data.get("delivery_note_ref_no"):
-						item_doc.save(ignore_permissions=True)
 
-					frappe.db.set_value(
-						"Purchase Receipt Item",
-						d.name,
-						"custom_purchase_receipt_item_breakup",
-						purchase_item_breakup.name,
-					)
-				
+				purchase_item_breakup.insert(ignore_permissions=True)
+				purchase_item_breakup_name.append(purchase_item_breakup.name)
+
+				if not data.get("delivery_note_ref_no"):
+					item_doc.save(ignore_permissions=True)
+
+				frappe.db.set_value(
+					"Purchase Receipt Item",
+					d.name,
+					"custom_purchase_receipt_item_breakup",
+					purchase_item_breakup.name,
+				)
+
 			frappe.db.commit()
 			return {"message": f"{purchase_receipt.name}"}
 	except Exception as e:
 		frappe.logger("Create Purchase").exception(e)
 		return error_response(str(e))
-
-
-
 
 def error_response(err_msg):
 	return {"status": "error", "message": err_msg}
