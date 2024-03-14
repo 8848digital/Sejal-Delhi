@@ -25,9 +25,9 @@ def create_delivery_note_sales_return(kwargs):
 		items = kwargs.get("items", [])
 		purchase_receipt_status = frappe.db.sql(
 			f"""SELECT sle.item_code
-                                                FROM `tabStock Ledger Entry` AS sle
-                                                WHERE sle.item_code = '{items[0].get("item_code")}' AND sle.voucher_type = 'Delivery Note'
-                                                """
+                FROM `tabStock Ledger Entry` AS sle
+                WHERE sle.item_code = '{items[0].get("item_code")}' AND sle.voucher_type = 'Delivery Note'
+            """
 		)
 
 		if items[0].get("item_code") not in flattened_list:
