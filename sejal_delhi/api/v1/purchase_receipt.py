@@ -5,7 +5,6 @@ from frappe.model.naming import make_autoname
 from frappe.utils.image import optimize_image
 import requests
 
-# Creates
 @frappe.whitelist(allow_guest=True)
 def create_purchase_receipt(kwargs):
 	try:
@@ -37,165 +36,233 @@ def create_purchase_receipt(kwargs):
 					}
 				).insert(ignore_permissions=True)
 				purchase_receipt.custom_karigar = sup.name
-			purchase_receipt.custom_delivery_note_ref_no = data["delivery_note_ref_no"]
-
-			url = f'https://staging-sejal-mumbai.8848digitalerp.com/api/resource/Delivery Note/{data["delivery_note_ref_no"]}'
-			headers = {
-				'Authorization': 'token b82af3167ca89c0:d72ad743d984e2a',
-			}
-
-			response = requests.get(url, headers=headers)
 			
-			delivery_note_detail = eval(response.text)
-			delivery_note_item_detail = delivery_note_detail["data"]["items"]
-			# return delivery_note_item_detail
-			table_data = {}
-			# return data["items"]
-			for row in delivery_note_item_detail:
-				if len(row["item_code"]) > 3:
-					product_code = row["item_code"]
-					item = frappe.new_doc("Item")
-					# item_name = make_autoname(product_code + "-.#", "", item)
-					item.name = product_code
-					item.item_code = product_code
-					item.stock_uom = "Nos"
-					item.item_group = "All Item Groups"
-					# item.custom_kun_karigar = row.get("custom_kun_karigar")
-					item.custom_net_wt = row.get("custom_net_wt")
-					# item.custom_few_wt = row.get("custom_few_wt")
-					item.custom_gross_wt = row.get("custom_gross_wt")
-					# item.custom_mat_wt = row.get("custom_mat_wt")
-					item.custom_other = row.get("custom_other")
-					# item.custom_total = row.get("custom_total")
-					# item.custom_add_photo = row["custom_add_photo"]
-					item.insert(ignore_permissions=True)
-					row["item_code"] = item.name
-					# kun_karigar_exist = frappe.db.sql(
-					# 	f'''select name from `tabKundan Karigar` where karigar_name="{row['custom_kun_karigar']}"'''
-					# )
+			if data.get("delivery_note_ref_no"):
+				purchase_receipt.custom_delivery_note_ref_no = data["delivery_note_ref_no"]
+				settings = frappe.get_doc('Sejal Settings')
+				sejal_mumbai_app_url = settings.sejal_mumbai_app_url
+				dn_url = sejal_mumbai_app_url + "/api/resource/Delivery Note/" + data["delivery_note_ref_no"]
+				api_key = settings.api_key
+				api_secret = settings.api_secret
+				headers = {
+					'Authorization': f'token {api_key}:{api_secret}',
+				}
+				
+				dn_response = requests.get(dn_url, headers=headers)
 
-					# if kun_karigar_exist:
-					# 	kun_karigar = kun_karigar_exist[0][0]
-					# else:
-					# 	kun_karigar = ""
-					# 	if not row["custom_kun_karigar"]:
-					# 		pass
+				delivery_note_detail = dn_response.json()
+				delivery_note_item_detail = delivery_note_detail["data"]["items"]
+				all_item_codes = [item["item_code"] for item in delivery_note_item_detail]
+				item_list = []
+				for item_code in all_item_codes:
+					item_code_url = sejal_mumbai_app_url + "/api/resource/Item/" + item_code
+					item_code_response = requests.get(item_code_url, headers=headers)
+					item_code_detail = item_code_response.json()	
+					item_list.append(item_code_detail["data"])
+				# return item_list
 
-					# 	else:
-					# 		kun_karigar_doc = frappe.get_doc(
-					# 			{
-					# 				"doctype": "Kundan Karigar",
-					# 				"karigar_name": row["custom_kun_karigar"],
-					# 			}
-					# 		).insert(ignore_permissions=True)
-					# 		kun_karigar = kun_karigar_doc.name
-					purchase_receipt.append(
-						"items",
-						{
-							"item_code": row["item_code"],
-							# "custom_kun_karigar": kun_karigar,
-							"custom_net_wt": row["custom_net_wt"],
-							# "custom_few_wt": row["custom_few_wt"],
-							"custom_gross_wt": row["custom_gross_wt"],
-							# "custom_mat_wt": row["custom_mat_wt"],
-							"custom_other": row["custom_other"],
-							"custom_total": row["custom_amount"],
-							# "custom_add_photo": row["custom_add_photo"],
-							"custom_kun_wt": row["custom_kun_wt"],
-							"custom_cs_wt": row["custom_cs_wt"],
-							"custom_bb_wt": row["custom_bb_wt"],
-							"custom_other_wt": row["custom_other_wt"],
-							"custom_cs": row["custom_cs"],
-							"custom_cs_amt": row["custom_cs_amt"],
-							"custom_kun_pc": row["custom_kun_pc"],
-							"custom_kun": row["custom_kun"],
-							"custom_kun_amt": row["custom_kun_amt"],
-							"custom_ot_": row["custom_ot_"],
-							"custom_ot_amt": row["custom_ot_amt"],
-						},
-					)
-					frappe.db.commit()
-					# for table_row in row["table"]:
-					# 	if not table_data.get(row["item_code"]):
-					# 		table_data[row["item_code"]] = [table_row]
-					# 	else:
-					# 		table_data[row["item_code"]].append(table_row)
-				else:
-					return {"error": "Product Code length should be greater than 3"}
+				table_data = {}
+				for row in item_list:
+					if len(row["item_code"]) > 3:
+						kun_karigar_exist = frappe.db.exists("Kundan Karigar", {"karigar_name": row['custom_kun_karigar']})
+
+						if kun_karigar_exist:
+							kun_karigar = row['custom_kun_karigar']
+						else:
+							kun_karigar_doc = frappe.get_doc(
+								{
+									"doctype": "Kundan Karigar",
+									"karigar_name": row["custom_kun_karigar"],
+								}
+							).insert(ignore_permissions=True)
+							kun_karigar = kun_karigar_doc.name
+						product_code = row["item_code"]
+						item = frappe.new_doc("Item")
+						item.name = product_code
+						item.item_code = product_code
+						item.stock_uom = "Nos"
+						item.item_group = "All Item Groups"
+						item.custom_kun_karigar = row.get("custom_kun_karigar")
+						item.custom_net_wt = row.get("custom_net_wt")
+						item.custom_few_wt = row.get("custom_few_wt")
+						item.custom_gross_wt = row.get("custom_gross_wt")
+						item.custom_mat_wt = row.get("custom_mat_wt")
+						item.custom_other = row.get("custom_other")
+						item.custom_total = row.get("custom_total")
+						item.custom_add_photo = row["custom_add_photo"]
+
+						for item_detail in row["custom_purchase_receipt_item_breakup_detail"]:
+							
+							item.append(
+							"custom_purchase_receipt_item_breakup_detail",
+							{
+								"material_abbr": item_detail["material_abbr"], 
+								"material": item_detail["material"],
+								"pcs": item_detail["pcs"],
+								"piece_": item_detail["piece_"],
+								"carat": item_detail["carat"],
+								"weight": item_detail["weight"],
+								"gm_": item_detail["gm_"],
+								"amount": item_detail["amount"],
+							}
+							)
+						item.insert(ignore_permissions=True)
+						row["item_code"] = item.name
+
+						purchase_receipt.append(
+							"items",
+							{
+								"item_code": row["item_code"],
+								"custom_kun_karigar": kun_karigar,
+								"custom_net_wt": row["custom_net_wt"],
+								"custom_few_wt": row["custom_few_wt"],
+								"custom_gross_wt": row["custom_gross_wt"],
+								"custom_mat_wt": row["custom_mat_wt"],
+								"custom_other": row["custom_other"],
+								"custom_total": row["custom_total"],
+								"custom_add_photo": row["custom_add_photo"],
+							},
+						)
+						# frappe.db.commit()
+						for table_row in row["custom_purchase_receipt_item_breakup_detail"]:
+							if not table_data.get(row["item_code"]):
+								table_data[row["item_code"]] = [table_row]
+							else:
+								table_data[row["item_code"]].append(table_row)
+					else:
+						return {"error": "Product Code length should be greater than 3"}
+			else:
+				table_data = {}
+				for row in data["items"]:
+					if len(row["item_code"]) == 3:
+						kun_karigar_exist = frappe.db.exists("Kundan Karigar", {"karigar_name": row['custom_kun_karigar']})
+
+						if kun_karigar_exist:
+							kun_karigar = row['custom_kun_karigar']
+						else:
+							kun_karigar_doc = frappe.get_doc(
+								{
+									"doctype": "Kundan Karigar",
+									"karigar_name": row["custom_kun_karigar"],
+								}
+							).insert(ignore_permissions=True)
+							kun_karigar = kun_karigar_doc.name
+
+						product_code = row["item_code"]
+						item = frappe.new_doc("Item")
+						item_name = make_autoname(product_code + "-.#", "", item)
+						item.name = item_name
+						item.item_code = item_name
+						item.stock_uom = "Nos"
+						item.item_group = "All Item Groups"
+						item.custom_kun_karigar = row.get("custom_kun_karigar")
+						item.custom_net_wt = row.get("custom_net_wt")
+						item.custom_few_wt = row.get("custom_few_wt")
+						item.custom_gross_wt = row.get("custom_gross_wt")
+						item.custom_mat_wt = row.get("custom_mat_wt")
+						item.custom_other = row.get("custom_other")
+						item.custom_total = row.get("custom_total")
+						item.custom_add_photo = row["custom_add_photo"]
+						item.insert(ignore_permissions=True)
+						row["item_code"] = item.name
+
+						# PR item child table
+						purchase_receipt.append(
+							"items",
+							{
+								"item_code": row["item_code"],
+								"custom_kun_karigar": row.get("custom_kun_karigar"),
+								"custom_net_wt": row["custom_net_wt"],
+								"custom_few_wt": row["custom_few_wt"],
+								"custom_gross_wt": row["custom_gross_wt"],
+								"custom_mat_wt": row["custom_mat_wt"],
+								"custom_other": row["custom_other"],
+								"custom_total": row["custom_total"],
+								"custom_add_photo": row["custom_add_photo"],
+							},
+						)
+						# frappe.db.commit()
+						for table_row in row["table"]:
+							if not table_data.get(row["item_code"]):
+								table_data[row["item_code"]] = [table_row]
+							else:
+								table_data[row["item_code"]].append(table_row)
+					else:
+						return {"error": "Item Code length should be 3"}
 			purchase_receipt.insert(ignore_permissions=True)
 			# child table breakup create
-			# for d in purchase_receipt.items:
-			# 	# return table_data
-			# 	purchase_item_breakup = frappe.new_doc("Purchase Receipt Item Breakup")
-			# 	purchase_item_breakup.purchase_receipt_item = d.name
-			# 	# get the item doc
-			# 	item_doc = frappe.get_doc("Item", d.item_code)
-			# 	# set purchase receipt in item
-			# 	item_doc.custom_purchase_receipt = purchase_receipt.name
-			# 	all_table_data = table_data[d.item_code]
-			# 	for t in all_table_data:
-			# 		# Create Material if not exist
-			# 		material_exist = frappe.db.sql(
-			# 			f'''select name,abbr from `tabMaterial` where material_name="{t['material']}"'''
-			# 		)
-			# 		if material_exist:
-			# 			material = material_exist[0][0]
-			# 			material_abbr = material_exist[0][1]
-			# 		else:
-			# 			material = ""
-			# 			material_abbr = ""
-			# 			if t["material"]:
-			# 				material_doc = frappe.get_doc(
-			# 					{
-			# 						"doctype": "Material",
-			# 						"material_name": t["material"],
-			# 						"abbr": t["material_abbr"],
-			# 					}
-			# 				).insert(ignore_permissions=True)
-			# 				material = material_doc.name
-			# 				material_abbr = material_doc.abbr
-			# 			else:
-			# 				pass
-			# 		purchase_item_breakup.append(
-			# 			"purchase_receipt_item_breakup_detail",
-			# 			{
-			# 				"material_abbr": material_abbr,
-			# 				"material": material,
-			# 				"pcs": t["pcs"],
-			# 				"piece_": t["piece_"],
-			# 				"carat": t["carat"],
-			# 				"carat_": t["carat_"],
-			# 				"weight": t["weight"],
-			# 				"gm_": t["gm_"],
-			# 				"amount": t["amount"],
-			# 			},
-			# 		)
+			for d in purchase_receipt.items:
 
-			# 		# add data to item breakup table
-			# 		item_doc.append(
-			# 			"custom_purchase_receipt_item_breakup_detail",
-			# 			{
-			# 				"material_abbr": material_abbr,
-			# 				"material": material,
-			# 				"pcs": t["pcs"],
-			# 				"piece_": t["piece_"],
-			# 				"carat": t["carat"],
-			# 				"carat_": t["carat_"],
-			# 				"weight": t["weight"],
-			# 				"gm_": t["gm_"],
-			# 				"amount": t["amount"],
-			# 			},
-			# 		)
-			# 	purchase_item_breakup.insert(ignore_permissions=True)
-			# 	item_doc.save(ignore_permissions=True)
-			# 	frappe.db.set_value(
-			# 		"Purchase Receipt Item",
-			# 		d.name,
-			# 		"custom_purchase_receipt_item_breakup",
-			# 		purchase_item_breakup.name,
-			# 	)
+				purchase_item_breakup = frappe.new_doc("Purchase Receipt Item Breakup")
+				purchase_item_breakup.purchase_receipt_item = d.name
+				# get the item doc
+				item_doc = frappe.get_doc("Item", d.item_code)
+				# set purchase receipt in item
+				item_doc.custom_purchase_receipt = purchase_receipt.name
+				all_table_data = table_data[d.item_code]
+				# return all_table_data
+				for t in all_table_data:
+					
+					material_exist = frappe.db.sql(
+						f'''select name,abbr from `tabMaterial` where material_name="{t['material']}"'''
+					)
+					if material_exist:
+						material = material_exist[0][0]
+						material_abbr = material_exist[0][1]
+					else:
+						material = ""
+						material_abbr = ""
+						if t["material"]:
+							material_doc = frappe.get_doc(
+								{
+									"doctype": "Material",
+									"material_name": t["material"],
+									"abbr": t["material_abbr"],
+								}
+							).insert(ignore_permissions=True)
+							material = material_doc.name
+							material_abbr = material_doc.abbr
+						else:
+							pass
 
-			# frappe.delete_doc("Item", data['item_code'])
+					purchase_item_breakup.append(
+					"purchase_receipt_item_breakup_detail",
+						{
+							"material_abbr": material_abbr,
+							"material": material,
+							"pcs": t["pcs"],
+							"piece_": t["piece_"],
+							"carat": t["carat"],
+							"weight": t["weight"],
+							"gm_": t["gm_"],
+							"amount": t["amount"],
+						},
+					)
+					item_doc.append(
+						"custom_purchase_receipt_item_breakup_detail",
+						{
+							"material_abbr": material_abbr, 
+							"material": material,
+							"pcs": t["pcs"],
+							"piece_": t["piece_"],
+							"carat": t["carat"],
+							"weight": t["weight"],
+							"gm_": t["gm_"],
+							"amount": t["amount"],
+						}
+					)
+					purchase_item_breakup.insert(ignore_permissions=True)
+					# item_doc.insert(ignore_permissions=True)
+					if not data.get("delivery_note_ref_no"):
+						item_doc.save(ignore_permissions=True)
+
+					frappe.db.set_value(
+						"Purchase Receipt Item",
+						d.name,
+						"custom_purchase_receipt_item_breakup",
+						purchase_item_breakup.name,
+					)
+				
 			frappe.db.commit()
 			return {"message": f"{purchase_receipt.name}"}
 	except Exception as e:
@@ -203,9 +270,6 @@ def create_purchase_receipt(kwargs):
 		return error_response(str(e))
 
 
-# except Exception as e:
-#     frappe.logger('PurchaseReceipt').exception(e)
-# return error_response(str(e))
 
 
 def error_response(err_msg):
