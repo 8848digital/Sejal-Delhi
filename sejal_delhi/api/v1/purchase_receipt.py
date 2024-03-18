@@ -26,7 +26,6 @@ def create_purchase_receipt(kwargs):
 
 		return {"message": f"{purchase_receipt.name}"}
 
-
 def get_warehouse_and_karigar(purchase_receipt, data):
 	custom_ready_receipt_type = data.get("custom_ready_receipt_type")
 	warehouse = frappe.db.get_value(
@@ -83,6 +82,8 @@ def process_items_without_delivery_note_refno(data, purchase_receipt, table_data
 def create_purchase_receipt_item_breakup_detail(purchase_receipt, table_data, data):
 	for d in purchase_receipt.items:
 		purchase_item_breakup = frappe.new_doc("Purchase Receipt Item Breakup")
+		purchase_item_breakup_name = make_autoname("Purchase Receipt Item-" + d.item_code + "-.#", "", purchase_item_breakup)
+		purchase_item_breakup.name = purchase_item_breakup_name
 		purchase_item_breakup.purchase_receipt_item = d.name
 		item_doc = frappe.get_doc("Item", d.item_code)
 		item_doc.custom_purchase_receipt = purchase_receipt.name
@@ -118,7 +119,6 @@ def create_purchase_item_breakup_detail(purchase_item_breakup, material_abbr, ma
 			"amount": t["amount"],
 		},
 	)
-
 
 def append_item_breakup_detail(table_data, row, item_breakup_detail):
 	for table_row in row[item_breakup_detail]:
