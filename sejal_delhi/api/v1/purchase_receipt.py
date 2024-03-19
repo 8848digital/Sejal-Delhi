@@ -22,7 +22,7 @@ def create_purchase_receipt(kwargs):
 		purchase_receipt.insert(ignore_permissions=True)
 		create_purchase_receipt_item_breakup_detail(purchase_receipt, table_data, data)
 
-		return {"message": f"{purchase_receipt.name}"}
+		return build_response("success", f"Purchase Receipt {purchase_receipt.name} created successfully")
 
 def get_warehouse_and_karigar(purchase_receipt, data):
 	custom_ready_receipt_type = data.get("custom_ready_receipt_type")
@@ -50,17 +50,30 @@ def get_warehouse_and_karigar(purchase_receipt, data):
 
 def process_items_without_delivery_note_refno(data, purchase_receipt, table_data):
 	for row in data["items"]:
-		if len(row["product_code"]) == 3:
-			kun_karigar = get_kun_karigar_details(row)
-			create_item_from_data(row)
+		if '-' in row["product_code"]:
+			if row["product_code"][:3].isalpha() and row["product_code"][3] == '-' and row["product_code"][4:].isdigit():
+				kun_karigar = get_kun_karigar_details(row)
+				create_item_from_data(row)
 
-			purchase_receipt_item_details(purchase_receipt, row, kun_karigar)
+				purchase_receipt_item_details(purchase_receipt, row, kun_karigar)
 
-			item_breakup_detail = "table"
-			append_item_breakup_detail(table_data, row, item_breakup_detail)
+				item_breakup_detail = "table"
+				append_item_breakup_detail(table_data, row, item_breakup_detail)
 
+			else:
+				return {"error": "Item Code length should be 3"}
 		else:
-			return {"error": "Item Code length should be 3"}
+			if len(row["product_code"]) == 3 and row["product_code"].isalpha():
+				kun_karigar = get_kun_karigar_details(row)
+				create_item_from_data(row)
+
+				purchase_receipt_item_details(purchase_receipt, row, kun_karigar)
+
+				item_breakup_detail = "table"
+				append_item_breakup_detail(table_data, row, item_breakup_detail)
+
+			else:
+				return {"error": "Item Code length should be 3"}
 
 def create_purchase_receipt_item_breakup_detail(purchase_receipt, table_data, data):
 	for d in purchase_receipt.items:
@@ -111,10 +124,14 @@ def append_item_breakup_detail(table_data, row, item_breakup_detail):
 			table_data[row["product_code"]].append(table_row)
 
 def create_item_from_data(row):
-	product_code = row["product_code"]
+	product_code = row["product_code"].upper()
 	item = frappe.new_doc("Item")
-	item_name = make_autoname(product_code + "-.#", "", item)
-	item.name = item_name
+	if '-' in product_code:
+		item_name = product_code
+		item.name = product_code
+	else:
+		item_name = make_autoname(product_code + "-.#", "", item)
+		item.name = item_name
 	item.item_code = item_name
 	item.stock_uom = "Nos"
 	item.item_group = "All Item Groups"
@@ -243,7 +260,7 @@ def get_item_code_details_from_mumbai_site(kwargs):
 					"custom_other": item["custom_other"],
 					"custom_total": item["custom_total"],
 					"custom_add_photo": item["custom_add_photo"],
-					"custom_purchase_receipt_item_breakup_detail": [
+					"table": [
 					{
 						"idx": detail["idx"],
 						"material_abbr": detail["material_abbr"],
@@ -297,7 +314,7 @@ def get_delivery_notes_from_mumbai_site(kwargs):
 		for dn in delivery_note_list_docstatus_one:
 			if dn in purchase_receipt_list:
 				delivery_note_list_docstatus_one.remove(dn)
-		return delivery_note_list_docstatus_one
+		return build_response("success", delivery_note_list_docstatus_one)
 	else:
 		return {"Error" : "Delivery Note does not exist"}
 
