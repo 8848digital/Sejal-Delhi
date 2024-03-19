@@ -13,7 +13,8 @@ def create_purchase_receipt(kwargs):
 		data = json.loads(frappe.request.data)
 		purchase_receipt = frappe.new_doc("Purchase Receipt")
 		purchase_receipt.remarks = data["remarks"]
-
+		if data["delivery_note_ref_no"]:
+			purchase_receipt.custom_delivery_note_ref_no = data["delivery_note_ref_no"]
 		get_warehouse_and_karigar(purchase_receipt, data)
 
 		if data.get("items"):
@@ -22,7 +23,7 @@ def create_purchase_receipt(kwargs):
 		purchase_receipt.insert(ignore_permissions=True)
 		create_purchase_receipt_item_breakup_detail(purchase_receipt, table_data, data)
 
-		return build_response("success", f"Purchase Receipt {purchase_receipt.name} created successfully")
+		return build_response("success", f"{purchase_receipt.name}")
 
 def get_warehouse_and_karigar(purchase_receipt, data):
 	custom_ready_receipt_type = data.get("custom_ready_receipt_type")
@@ -443,6 +444,7 @@ def get_name_specific_purchase_receipt(kwargs):
                 pr.idx as receipt_idx,
                 pr.custom_karigar,
                 pr.remarks,
+				pr.custom_delivery_note_ref_no,
                 pr.docstatus,
                 pr.custom_ready_receipt_type,
                 pr.posting_date,
@@ -483,8 +485,6 @@ def get_name_specific_purchase_receipt(kwargs):
             ORDER BY
                 item_idx ASC,
                 pribd_idx ASC
-
-
         """,
 			as_dict=True,
 		)
@@ -513,6 +513,7 @@ def get_grouped_data(data):
 				"name": receipt_name,
 				"custom_karigar": row["custom_karigar"],
 				"remarks": row["remarks"],
+				"delivery_note_ref_no": row["custom_delivery_note_ref_no"],
 				"docstatus": row["docstatus"],
 				"custom_ready_receipt_type": row["custom_ready_receipt_type"],
 				"posting_date": row["posting_date"],
