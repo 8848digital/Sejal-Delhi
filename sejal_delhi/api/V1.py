@@ -42,6 +42,8 @@ class V1:
 				"print_purchase_receipt_mangalsutra",
 				"delete_purchase_receipt",
 				"get_specific_kundan_purchase_receipt",
+				"get_item_code_details_from_mumbai_site",
+				"get_delivery_notes_from_mumbai_site",
 			],
 			"sales": [
 				"create_delivery_note",
