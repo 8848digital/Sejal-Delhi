@@ -68,6 +68,7 @@ class V1:
 				"get_item_status_report",
 				"get_daily_qty_status_report",
 				"print_report_daily_qty_status",
+				"product_code_report",
 			],
 			"barcode": [
 				"get_barcode",

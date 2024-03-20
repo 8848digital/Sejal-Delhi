@@ -545,3 +545,35 @@ def build_response(status, data=None, message=None):
         response["message"] = message
 
     return response
+
+
+frappe.whitelist(allow_guest=True)
+def product_code_report(kwargs):
+	name = kwargs.get("name")
+	custom_karigar = kwargs.get("custom_karigar")
+	conditions = get_conditions(name, custom_karigar)
+	data = frappe.db.sql(
+		f"""
+        SELECT
+            item.name,
+            item.custom_gross_wt,
+            item.custom_net_wt,
+            item.custom_karigar
+        FROM `tabItem` as item
+        {conditions}
+        """,
+		as_dict=True,
+	)
+	response = {"status": "success", "data": data}
+	return response
+
+
+def get_conditions(name=None, custom_karigar=None):
+	conditions = ""
+	if name:
+		conditions += f'item.name = "{name}" AND '
+	if custom_karigar:
+		conditions += f'item.custom_karigar = "{custom_karigar}" AND '
+	if conditions:
+		return "WHERE " + conditions[:-5]  # Removing the trailing ' AND ' and adding 'WHERE'
+	return conditions
