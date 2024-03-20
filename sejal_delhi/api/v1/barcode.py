@@ -475,7 +475,7 @@ def get_multiple_specific_print_barcode(kwargs, internal_call=False):
 		return item_list
 	else:
 		response_data = {
-			"print_url": "{}/api/method/sj_antique.api.v1.barcode.report?item_list=[{}]".format(
+			"print_url": "{}/api/method/sejal_delhi.api.v1.barcode.report?item_list=[{}]".format(
 				frappe.utils.get_url(), ",".join(f"'{name}'" for name in name_list)
 			),
 			"status": "success",

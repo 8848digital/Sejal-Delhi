@@ -232,8 +232,12 @@ doc_events = {
 
 fixtures = [
 	{
-		"dt": "Custom Field",
-		"filters": [["module", "in", ["sejal_delhi"]]],
+		"dt": "Custom Field","filters": [["module", "in", ["sejal_delhi"]]],
 	},
-	{"dt": "Property Setter", "filters": [["module", "in", ["sejal_delhi"]]]},
+	{
+        "dt": "Property Setter", "filters": [["module", "in", ["sejal_delhi"]]],
+    },
+    {
+        "dt": "Report", "filters": [["module", "in", ["sejal_delhi"]]],
+    },
 ]

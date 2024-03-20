@@ -1,0 +1,177 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "format:{item_code}",
+ "creation": "2024-03-20 12:10:16.730412",
+ "default_view": "List",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "item_code",
+  "custom_gross_wt",
+  "column_break_bnkrz",
+  "custom_kun_wt",
+  "custom_cs_wt",
+  "section_break_lebjk",
+  "custom_bb_wt",
+  "custom_other_wt",
+  "column_break_hnze7",
+  "custom_net_wt",
+  "custom_cs",
+  "section_break_qmgzt",
+  "custom_cs_amt",
+  "custom_kun_pc",
+  "column_break_b3lmz",
+  "custom_kun",
+  "custom_kun_amt",
+  "section_break_ulqfh",
+  "custom_ot_",
+  "custom_ot_amt",
+  "column_break_dygcv",
+  "custom_other",
+  "custom_amount",
+  "date"
+ ],
+ "fields": [
+  {
+   "fieldname": "item_code",
+   "fieldtype": "Link",
+   "label": "Item Code",
+   "options": "Item"
+  },
+  {
+   "fieldname": "custom_gross_wt",
+   "fieldtype": "Float",
+   "label": "Gross Wt"
+  },
+  {
+   "fieldname": "column_break_bnkrz",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "custom_kun_wt",
+   "fieldtype": "Float",
+   "label": "Kun Wt"
+  },
+  {
+   "fieldname": "custom_cs_wt",
+   "fieldtype": "Float",
+   "label": "CS Wt"
+  },
+  {
+   "fieldname": "section_break_lebjk",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "custom_bb_wt",
+   "fieldtype": "Float",
+   "label": "BB Wt"
+  },
+  {
+   "fieldname": "custom_other_wt",
+   "fieldtype": "Float",
+   "label": "Other Wt"
+  },
+  {
+   "fieldname": "column_break_hnze7",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "custom_net_wt",
+   "fieldtype": "Float",
+   "label": "Net Wt"
+  },
+  {
+   "fieldname": "custom_cs",
+   "fieldtype": "Float",
+   "label": "Cs @"
+  },
+  {
+   "fieldname": "section_break_qmgzt",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "custom_cs_amt",
+   "fieldtype": "Float",
+   "label": "CS Amt"
+  },
+  {
+   "fieldname": "custom_kun_pc",
+   "fieldtype": "Float",
+   "label": "Kun Pc"
+  },
+  {
+   "fieldname": "column_break_b3lmz",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "custom_kun",
+   "fieldtype": "Float",
+   "label": "Kun @"
+  },
+  {
+   "fieldname": "custom_kun_amt",
+   "fieldtype": "Float",
+   "label": "Kun Amt"
+  },
+  {
+   "fieldname": "section_break_ulqfh",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "custom_ot_",
+   "fieldtype": "Float",
+   "label": "Ot @"
+  },
+  {
+   "fieldname": "custom_ot_amt",
+   "fieldtype": "Float",
+   "label": "Ot Amt"
+  },
+  {
+   "fieldname": "column_break_dygcv",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "custom_other",
+   "fieldtype": "Float",
+   "label": "Other"
+  },
+  {
+   "fieldname": "custom_amount",
+   "fieldtype": "Float",
+   "label": "Amount"
+  },
+  {
+   "fieldname": "date",
+   "fieldtype": "Date",
+   "label": "Date"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2024-03-20 12:10:16.730412",
+ "modified_by": "Administrator",
+ "module": "sejal_delhi",
+ "name": "Barcode",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

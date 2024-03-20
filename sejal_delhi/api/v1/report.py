@@ -491,22 +491,22 @@ def print_report_daily_qty_status(kwargs):
     try:
         # Construct print URL
         if custom_karigar is None or from_date is None or to_date is None :
-            print_url = f"{frappe.utils.get_url()}/api/method/sj_antique.sj_antique.report.daily_qty_status.daily_qty_status.report"
+            print_url = f"{frappe.utils.get_url()}/api/method/sejal_delhi.sejal_delhi.report.daily_qty_status.daily_qty_status.report"
         if custom_karigar is not None:
-            print_url = f"{frappe.utils.get_url()}/api/method/sj_antique.sj_antique.report.daily_qty_status.daily_qty_status.report?custom_karigar={custom_karigar}"
+            print_url = f"{frappe.utils.get_url()}/api/method/sejal_delhi.sejal_delhi.report.daily_qty_status.daily_qty_status.report?custom_karigar={custom_karigar}"
         if from_date is not None:
-            print_url = f"{frappe.utils.get_url()}/api/method/sj_antique.sj_antique.report.daily_qty_status.daily_qty_status.report?from_date={from_date}"   
+            print_url = f"{frappe.utils.get_url()}/api/method/sejal_delhi.sejal_delhi.report.daily_qty_status.daily_qty_status.report?from_date={from_date}"   
         if to_date is not None:
-            print_url = f"{frappe.utils.get_url()}/api/method/sj_antique.sj_antique.report.daily_qty_status.daily_qty_status.report?to_date={to_date}"         
+            print_url = f"{frappe.utils.get_url()}/api/method/sejal_delhi.sejal_delhi.report.daily_qty_status.daily_qty_status.report?to_date={to_date}"         
         if custom_karigar is not None and from_date is not None:
-            print_url = f"{frappe.utils.get_url()}/api/method/sj_antique.sj_antique.report.daily_qty_status.daily_qty_status.report?custom_karigar={custom_karigar}&from_date={from_date}"   
+            print_url = f"{frappe.utils.get_url()}/api/method/sejal_delhi.sejal_delhi.report.daily_qty_status.daily_qty_status.report?custom_karigar={custom_karigar}&from_date={from_date}"   
         if custom_karigar is not None and to_date is not None:
-            print_url = f"{frappe.utils.get_url()}/api/method/sj_antique.sj_antique.report.daily_qty_status.daily_qty_status.report?custom_karigar={custom_karigar}&to_date={to_date}"   
+            print_url = f"{frappe.utils.get_url()}/api/method/sejal_delhi.sejal_delhi.report.daily_qty_status.daily_qty_status.report?custom_karigar={custom_karigar}&to_date={to_date}"   
         if from_date is not None and to_date is not None:
-            print_url = f"{frappe.utils.get_url()}/api/method/sj_antique.sj_antique.report.daily_qty_status.daily_qty_status.report?from_date={from_date}&to_date={to_date}"   
+            print_url = f"{frappe.utils.get_url()}/api/method/sejal_delhi.sejal_delhi.report.daily_qty_status.daily_qty_status.report?from_date={from_date}&to_date={to_date}"   
         if custom_karigar is not None and from_date is not None and to_date is not None:
             print("All parameters are present.",custom_karigar,from_date,to_date)
-            print_url = f"{frappe.utils.get_url()}/api/method/sj_antique.sj_antique.report.daily_qty_status.daily_qty_status.report?custom_karigar={custom_karigar}&from_date={from_date}&to_date={to_date}"
+            print_url = f"{frappe.utils.get_url()}/api/method/sejal_delhi.sejal_delhi.report.daily_qty_status.daily_qty_status.report?custom_karigar={custom_karigar}&from_date={from_date}&to_date={to_date}"
         return build_response("success", data={"print_url": print_url})
     except Exception as e:
         return frappe.logger("Report").exception(e)
