@@ -84,6 +84,7 @@ def create_purchase_receipt_item_breakup_detail(purchase_receipt, table_data, da
 		purchase_item_breakup.purchase_receipt_item = d.name
 		item_doc = frappe.get_doc("Item", d.item_code)
 		item_doc.custom_purchase_receipt = purchase_receipt.name
+		item_doc.custom_karigar = purchase_receipt.custom_karigar
 		all_table_data = table_data[d.item_code]
 		for t in all_table_data:
 
@@ -138,6 +139,7 @@ def create_item_from_data(row):
 	item.item_group = "All Item Groups"
 	if row.get("custom_kun_karigar"):
 		item.custom_kun_karigar = row.get("custom_kun_karigar")
+	
 	item.custom_net_wt = row.get("custom_net_wt")
 	item.custom_few_wt = row.get("custom_few_wt")
 	item.custom_gross_wt = row.get("custom_gross_wt")
@@ -238,53 +240,59 @@ def get_item_code_details_from_mumbai_site(kwargs):
 
 		dn_response = requests.get(dn_url, headers=headers)
 		if dn_response:
-			delivery_note_detail = dn_response.json()
-			delivery_note_item_detail = delivery_note_detail["data"]["items"]
-			all_item_codes = [item["item_code"] for item in delivery_note_item_detail]
-			item_list = []
-			for item_code in all_item_codes:
-				item_code_url = sejal_mumbai_app_url + "/api/resource/Item/" + item_code
-				item_code_response = requests.get(item_code_url, headers=headers)
-				item_code_detail = item_code_response.json()
-				item_list.append(item_code_detail["data"])
-			
-			extracted_data = []
-			for index, item in enumerate(item_list, start=1):
-				extracted_item = {
-					"idx": index,
-					"product_code": item["item_code"],
-					"custom_kun_karigar": item["custom_kun_karigar"],
-					"custom_net_wt": item["custom_net_wt"],
-					"custom_few_wt": item["custom_few_wt"],
-					"custom_gross_wt": item["custom_gross_wt"],
-					"custom_mat_wt": item["custom_mat_wt"],
-					"custom_other": item["custom_other"],
-					"custom_total": item["custom_total"],
-					"custom_add_photo": item["custom_add_photo"],
-					"table": [
-					{
-						"idx": detail["idx"],
-						"material_abbr": detail["material_abbr"],
-						"material": detail["material"],
-						"pcs": detail["pcs"],
-						"piece_": detail["piece_"],
-						"carat": detail["carat"],
-						"carat_": detail["carat_"],
-						"weight": detail["weight"],
-						"gm_": detail["gm_"],
-						"amount": detail["amount"]
-					}
-					for detail in item["custom_purchase_receipt_item_breakup_detail"]
-				]
-				}
-				extracted_data.append(extracted_item)
+			item_code_specific_data = get_item_code_specific_details(dn_response, sejal_mumbai_app_url, headers)
 
-			return build_response("success", extracted_data)
+			return build_response("success", item_code_specific_data)
 		else:
 			return {"Error" : "Delivery Note does not exist"}
 	except Exception as e:
 		frappe.log_error(message=str(e))
 		return build_response("error", message=_("An error occurred while fetching data."))
+
+
+def get_item_code_specific_details(dn_response, sejal_mumbai_app_url, headers):
+	delivery_note_detail = dn_response.json()
+	delivery_note_item_detail = delivery_note_detail["data"]["items"]
+	all_item_codes = [item["item_code"] for item in delivery_note_item_detail]
+	item_list = []
+	for item_code in all_item_codes:
+		item_code_url = sejal_mumbai_app_url + "/api/resource/Item/" + item_code
+		item_code_response = requests.get(item_code_url, headers=headers)
+		item_code_detail = item_code_response.json()
+		item_list.append(item_code_detail["data"])
+	
+	item_code_specific_data = []
+	for index, item in enumerate(item_list, start=1):
+		extracted_item = {
+			"idx": index,
+			"product_code": item["item_code"],
+			"custom_kun_karigar": item["custom_kun_karigar"],
+			"custom_net_wt": item["custom_net_wt"],
+			"custom_few_wt": item["custom_few_wt"],
+			"custom_gross_wt": item["custom_gross_wt"],
+			"custom_mat_wt": item["custom_mat_wt"],
+			"custom_other": item["custom_other"],
+			"custom_total": item["custom_total"],
+			"custom_add_photo": item["custom_add_photo"],
+			"table": [
+			{
+				"idx": detail["idx"],
+				"material_abbr": detail["material_abbr"],
+				"material": detail["material"],
+				"pcs": detail["pcs"],
+				"piece_": detail["piece_"],
+				"carat": detail["carat"],
+				"carat_": detail["carat_"],
+				"weight": detail["weight"],
+				"gm_": detail["gm_"],
+				"amount": detail["amount"]
+			}
+			for detail in item["custom_purchase_receipt_item_breakup_detail"]
+		]
+		}
+		item_code_specific_data.append(extracted_item)
+	
+	return item_code_specific_data
 
 @frappe.whitelist(allow_guest=True)
 def get_delivery_notes_from_mumbai_site(kwargs):
@@ -299,25 +307,31 @@ def get_delivery_notes_from_mumbai_site(kwargs):
 	
 	dn_response = requests.get(dn_url, headers=headers)
 	if dn_response:
-		delivery_note_detail = dn_response.json()
-		delivery_note_list = [item["name"] for item in delivery_note_detail["data"]]
-		delivery_note_list_docstatus_one = []
-		for dn in delivery_note_list:
-			dn_detail_url = sejal_mumbai_app_url + "/api/resource/Delivery Note/" + dn
-			dn_detail_response = requests.get(dn_detail_url, headers=headers)
-			dn_detail = dn_detail_response.json()
-			if dn_detail["data"]["docstatus"] == 1:
-				delivery_note_list_docstatus_one.append(dn)
-		purchase_receipt = frappe.db.sql("""
-							SELECT pr.custom_delivery_note_ref_no FROM `tabPurchase Receipt` AS pr
-							""", as_dict=True)
-		purchase_receipt_list = [item["custom_delivery_note_ref_no"] for item in purchase_receipt]
-		for dn in delivery_note_list_docstatus_one:
-			if dn in purchase_receipt_list:
-				delivery_note_list_docstatus_one.remove(dn)
+		delivery_note_list_docstatus_one = get_delivery_note_list_for_purchase_receipt(dn_response, sejal_mumbai_app_url, headers)
+
 		return build_response("success", delivery_note_list_docstatus_one)
 	else:
 		return {"Error" : "Delivery Note does not exist"}
+
+def get_delivery_note_list_for_purchase_receipt(dn_response, sejal_mumbai_app_url, headers):
+	delivery_note_detail = dn_response.json()
+	delivery_note_list = [item["name"] for item in delivery_note_detail["data"]]
+	delivery_note_list_docstatus_one = []
+	for dn in delivery_note_list:
+		dn_detail_url = sejal_mumbai_app_url + "/api/resource/Delivery Note/" + dn
+		dn_detail_response = requests.get(dn_detail_url, headers=headers)
+		dn_detail = dn_detail_response.json()
+		if dn_detail["data"]["docstatus"] == 1:
+			delivery_note_list_docstatus_one.append(dn)
+	purchase_receipt = frappe.db.sql("""
+						SELECT pr.custom_delivery_note_ref_no FROM `tabPurchase Receipt` AS pr
+						""", as_dict=True)
+	purchase_receipt_list = [item["custom_delivery_note_ref_no"] for item in purchase_receipt]
+	for dn in delivery_note_list_docstatus_one:
+		if dn in purchase_receipt_list:
+			delivery_note_list_docstatus_one.remove(dn)
+
+	return delivery_note_list_docstatus_one
 
 
 def error_response(err_msg):
@@ -517,7 +531,7 @@ def get_grouped_data(data):
 				"docstatus": row["docstatus"],
 				"custom_ready_receipt_type": row["custom_ready_receipt_type"],
 				"posting_date": row["posting_date"],
-				"set_warehouse": row["set_warehouse"],
+				"store_location": row["set_warehouse"],
 				"items": {},
 			}
 
@@ -603,14 +617,11 @@ def put_purchase_receipt(kwargs):
 					)
 				purchase_receipt.items = []
 				item_code_list = frappe.db.get_list("Item", pluck="name")
+
+
+
 				for row in data["items"]:
-					if (
-						row["product_code"] in item_code_list
-						and "-" in row["product_code"]
-						and len(row["product_code"].split("-")[0]) == 3
-					) or (
-						"-" not in row["product_code"] and len(row["product_code"]) == 3
-					):
+					if (row["product_code"] in item_code_list and "-" in row["product_code"] and len(row["product_code"].split("-")[0]) == 3) or ("-" not in row["product_code"] and len(row["product_code"]) == 3):
 						if not row["idx"]:
 							frappe.throw("Please Enter a valid idx")
 						if frappe.db.exists("Item", row["product_code"]):
@@ -630,27 +641,23 @@ def put_purchase_receipt(kwargs):
 							# return new_item_code
 							new_product.insert(ignore_permissions=True)
 							item_code = new_item_code
+
+
+
+
 						# update image in item
-						frappe.db.set_value(
-							"Item",
-							item_code,
-							"custom_add_photo",
-							row.get("custom_add_photo"),
-						)
-						frappe.db.set_value(
-							"Item", item_code, "custom_kun_karigar", row.get("custom_kun_karigar")
-						)
+						frappe.db.set_value("Item", item_code, "custom_add_photo", row.get("custom_add_photo"))
+						frappe.db.set_value("Item", item_code, "custom_kun_karigar", row.get("custom_kun_karigar"))
 						frappe.db.set_value("Item", item_code, "custom_net_wt", row.get("custom_net_wt"))
 						frappe.db.set_value("Item", item_code, "custom_mat_wt", row.get("custom_mat_wt"))
 						frappe.db.set_value("Item", item_code, "custom_other", row.get("custom_other"))
 						frappe.db.set_value("Item", item_code, "custom_total", row.get("custom_total"))
-						frappe.db.set_value(
-							"Item", item_code, "custom_gross_wt", row.get("custom_gross_wt")
-						)
-						frappe.db.set_value(
-							"Item", item_code, "custom_purchase_receipt", purchase_receipt.name
-						)
-						# If there is inconsistency, use frappe.db.commit() after updating the image in the Item.
+						frappe.db.set_value("Item", item_code, "custom_gross_wt", row.get("custom_gross_wt"))
+						frappe.db.set_value("Item", item_code, "custom_purchase_receipt", purchase_receipt.name)
+
+
+
+
 						rec = next(
 							(rec for rec in purchase_receipt.items if rec.idx == row.get("idx")),
 							None,
@@ -671,6 +678,10 @@ def put_purchase_receipt(kwargs):
 								"custom_purchase_receipt_item_breakup"
 							),
 						}
+
+
+
+
 						if rec:
 							rec.update(rec_entry)
 						else:
@@ -692,6 +703,10 @@ def put_purchase_receipt(kwargs):
 							].name
 							purchase_receipt.save()
 							rec = purchase_receipt.items[len(purchase_receipt.items) - 1]
+
+
+
+
 						if rec.custom_purchase_receipt_item_breakup:
 							purchase_item_breakup = frappe.get_doc("Purchase Receipt Item Breakup", rec.name)
 							item_doc = frappe.get_doc("Item", item_code)
@@ -739,10 +754,17 @@ def put_purchase_receipt(kwargs):
 										child_entry,
 									)
 								purchase_item_breakup.save()
+
+
+
+
+
 					else:
 						return {
 							"Error": "Product Code length should be 3 / Product Code not present in Item list"
 						}
+					
+
 				item_doc.save()
 				purchase_receipt.save()
 				frappe.db.commit()
