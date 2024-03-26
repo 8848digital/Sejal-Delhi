@@ -5,7 +5,7 @@ from frappe.model.naming import make_autoname
 from frappe.utils.image import optimize_image
 import requests
 
-#Create Purchase Receipt
+#Create Purchase Receipt on delhi site
 @frappe.whitelist(allow_guest=True)
 def create_purchase_receipt(kwargs):
 	if frappe.request.method == "POST" and frappe.request.data:
