@@ -24,7 +24,7 @@
 ### 5. QR Code
 - It showcases the innovative use of QR codes to provide seamless access to item details. Each QR code generated corresponds to a specific item and can be printed in bulk for multiple items.
 
-### 6.  Target Warehouse
+### 6. Target Warehouse
 - In Delhi Warehouse which is our target warehouse we receive our stock there
 - So in Delhi warehouse we have created a field called delivery reference ID  in purchase receipt doctype and in that field we map Mumbai delivery note reference ID and with the help of that ID the items of    Mumbai warehouse is automatically fetched
 
