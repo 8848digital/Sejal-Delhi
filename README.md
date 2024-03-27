@@ -19,6 +19,7 @@
 
 ### 4. Report
 - It showcases Daily Quantity Status report where table is divided into two parts. Left side of the table describes all the material details of Purchase Receipt & Delivery Note Returns whereas right side describes all the material details of Delivery Notes.
+- Product Code Report
 
 ### 5. QR Code
 - It showcases the innovative use of QR codes to provide seamless access to item details. Each QR code generated corresponds to a specific item and can be printed in bulk for multiple items.
